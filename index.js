@@ -51,26 +51,31 @@ function render(leads) {
 deleteBtn.addEventListener("click", function () {
   let inputValue = inputEl.value
   let deletedValues = []
+  let totalDeleted = 0 // Keep track of the total number of items deleted
   if (inputValue) {
     // Split the input value by comma to get the indices
     let indices = inputValue.split(",")
+    // Sort the indices in descending order
+    indices.sort((a, b) => b - a)
     for (let i = 0; i < indices.length; i++) {
       let index = indices[i]
       // If the index includes a dash, it's a range
       if (index.includes("-")) {
         // Split the range into start and end
         let range = index.split("-")
-        let start = parseInt(range[0])
-        let end = parseInt(range[1])
+        let start = parseInt(range[0]) - totalDeleted // Adjust the start index
+        let end = parseInt(range[1]) - totalDeleted // Adjust the end index
         // If the start or end is not a number, or out of range, alert the user
         if (isNaN(start) || isNaN(end) || start < 1 || end > myLeads.length) {
           alert("Invalid range: " + index)
           continue
         }
         // Delete each link in the range and add them to the deletedValues array
-        deletedValues.push(...myLeads.splice(start - 1, end - start + 1))
+        let deleted = myLeads.splice(start - 1, end - start + 1)
+        deletedValues.push(...deleted)
+        totalDeleted += deleted.length // Update the total number of items deleted
       } else {
-        let idx = parseInt(index)
+        let idx = parseInt(index) - totalDeleted // Adjust the index
         // If the index is not a number, or out of range, alert the user
         if (isNaN(idx) || idx < 1 || idx > myLeads.length) {
           alert("Invalid index: " + index)
@@ -78,6 +83,7 @@ deleteBtn.addEventListener("click", function () {
         }
         // Delete the link at the index and add it to the deletedValues array
         deletedValues.push(myLeads.splice(idx - 1, 1)[0])
+        totalDeleted++ // Update the total number of items deleted
       }
     }
     // Set the input value to the deleted values, separated by " + "
