@@ -48,6 +48,7 @@ function render(leads) {
 }
 
 // ============ Delete ============
+// ============ Delete ============
 deleteBtn.addEventListener("click", function () {
   let inputValue = inputEl.value
   let deletedValues = []
@@ -72,7 +73,9 @@ deleteBtn.addEventListener("click", function () {
         }
         // Delete each link in the range and add them to the deletedValues array
         let deleted = myLeads.splice(start - 1, end - start + 1)
-        deletedValues.push(...deleted)
+        deletedValues.push(
+          ...deleted.map((item, idx) => `${start + idx}. ${item}`)
+        ) // Include the index in the deleted values
         totalDeleted += deleted.length // Update the total number of items deleted
       } else {
         let idx = parseInt(index) - totalDeleted // Adjust the index
@@ -82,7 +85,7 @@ deleteBtn.addEventListener("click", function () {
           continue
         }
         // Delete the link at the index and add it to the deletedValues array
-        deletedValues.push(myLeads.splice(idx - 1, 1)[0])
+        deletedValues.push(`${idx}. ${myLeads.splice(idx - 1, 1)[0]}`) // Include the index in the deleted value
         totalDeleted++ // Update the total number of items deleted
       }
     }
@@ -90,7 +93,7 @@ deleteBtn.addEventListener("click", function () {
     inputEl.value = deletedValues.join(" + ")
   } else {
     // If the input is empty, delete the first item in the list and put it in the input
-    inputEl.value = myLeads.splice(0, 1)[0]
+    inputEl.value = `1. ${myLeads.splice(0, 1)[0]}`
   }
   localStorage.setItem("myLeads", JSON.stringify(myLeads))
   render(myLeads)
@@ -112,9 +115,9 @@ inputEl.addEventListener("keydown", function (event) {
 
 inputBtn.addEventListener("click", function () {
   let inputValue = inputEl.value
-  let splitInput = inputValue.split(". ")
-  let index = parseInt(splitInput[0]) - 1
-  let text = splitInput[1]
+  let dotIndex = inputValue.indexOf(". ")
+  let index = parseInt(inputValue.substring(0, dotIndex)) - 1
+  let text = inputValue.substring(dotIndex + 2)
 
   // Check if the input starts with "number. "
   if (!isNaN(index) && text) {
