@@ -11,12 +11,6 @@ This repository contains the code for the Linkest Extension, a Chrome extension 
 - **Open Local Files**: Open files from your local machine directly in your browser.
 - **Google Search**: Perform a Google search on saved text with just one click.
 
-## Technologies Used
-
-- JavaScript
-- HTML
-- CSS
-
 ## Setup
 
 To install and use this extension locally, follow these steps:
