@@ -1,5 +1,7 @@
 # Linkest Extension
 
+<img height="400" src="Screenshot.png">
+
 ## Overview
 
 This repository contains the code for the Linkest Extension, a Chrome extension that enhances productivity by providing a suite of tools directly in your browser. The extension allows users to take notes, save tab links, open local files on the browser, and perform a Google search on saved text with one click.
