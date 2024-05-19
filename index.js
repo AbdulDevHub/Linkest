@@ -48,7 +48,12 @@ function render(leads) {
 }
 
 // ============ Delete ============
-// ============ Delete ============
+window.addEventListener("keydown", function (event) {
+  if (event.key === "Delete") {
+    deleteBtn.click()
+  }
+})
+
 deleteBtn.addEventListener("click", function () {
   let inputValue = inputEl.value
   let deletedValues = []
