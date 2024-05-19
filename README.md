@@ -1,5 +1,7 @@
 # Linkest Extension
 
+<img height="400" src="Screenshot.png">
+
 ## Overview
 
 This repository contains the code for the Linkest Extension, a Chrome extension that enhances productivity by providing a suite of tools directly in your browser. The extension allows users to take notes, save tab links, open local files on the browser, and perform a Google search on saved text with one click.
@@ -10,12 +12,6 @@ This repository contains the code for the Linkest Extension, a Chrome extension 
 - **Save Tab Links**: Save the links of your current tabs for easy access later.
 - **Open Local Files**: Open files from your local machine directly in your browser.
 - **Google Search**: Perform a Google search on saved text with just one click.
-
-## Technologies Used
-
-- JavaScript
-- HTML
-- CSS
 
 ## Setup
 
@@ -34,6 +30,6 @@ While this is a personal project, I'm open to collaboration. If you have suggest
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 <br>
