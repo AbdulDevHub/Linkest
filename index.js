@@ -15,15 +15,6 @@ if (leadsFromLocalStorage) {
   render(myLeads)
 }
 
-// ============ Save Tab ============
-tabBtn.addEventListener("click", function () {
-  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-    myLeads.unshift(tabs[0].url)
-    localStorage.setItem("myLeads", JSON.stringify(myLeads))
-    render(myLeads)
-  })
-})
-
 // ============ Render Bookmarks ============
 function render(leads) {
   let listItems = ""
@@ -46,6 +37,50 @@ function render(leads) {
   }
   ulEl.innerHTML = listItems
 }
+
+// ============ Save Tab ============
+tabBtn.addEventListener("click", function () {
+  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+    myLeads.unshift(tabs[0].url)
+    localStorage.setItem("myLeads", JSON.stringify(myLeads))
+    render(myLeads)
+  })
+})
+
+// ============ Save Input ============
+inputEl.addEventListener("keydown", function (event) {
+  if (event.key === "Enter") {
+    inputBtn.click()
+  }
+})
+
+inputBtn.addEventListener("click", function () {
+  let inputValue = inputEl.value
+  let dotIndex = inputValue.indexOf(". ")
+  let index = parseInt(inputValue.substring(0, dotIndex)) - 1
+  let text = inputValue.substring(dotIndex + 2)
+
+  // Check if the input starts with "number. "
+  if (!isNaN(index) && text) {
+    // If the index is within the array bounds, insert the new item at that position
+    if (index >= 0 && index <= myLeads.length) {
+      myLeads.splice(index, 0, text)
+    } else if (index < 0) {
+      // If the index is negative, add the new item at the beginning
+      myLeads.unshift(text)
+    } else {
+      // If the index is too large, add the new item at the end
+      myLeads.push(text)
+    }
+  } else {
+    // If the input does not start with "number. ", add the new item at the beginning
+    myLeads.unshift(inputValue)
+  }
+
+  inputEl.value = ""
+  localStorage.setItem("myLeads", JSON.stringify(myLeads))
+  render(myLeads)
+})
 
 // ============ Delete ============
 window.addEventListener("keydown", function (event) {
@@ -108,41 +143,6 @@ deleteBtn.addEventListener("click", function () {
 deleteAllBtn.addEventListener("dblclick", function () {
   localStorage.clear()
   myLeads = []
-  render(myLeads)
-})
-
-// ============ Save Input ============
-inputEl.addEventListener("keydown", function (event) {
-  if (event.key === "Enter") {
-    inputBtn.click()
-  }
-})
-
-inputBtn.addEventListener("click", function () {
-  let inputValue = inputEl.value
-  let dotIndex = inputValue.indexOf(". ")
-  let index = parseInt(inputValue.substring(0, dotIndex)) - 1
-  let text = inputValue.substring(dotIndex + 2)
-
-  // Check if the input starts with "number. "
-  if (!isNaN(index) && text) {
-    // If the index is within the array bounds, insert the new item at that position
-    if (index >= 0 && index <= myLeads.length) {
-      myLeads.splice(index, 0, text)
-    } else if (index < 0) {
-      // If the index is negative, add the new item at the beginning
-      myLeads.unshift(text)
-    } else {
-      // If the index is too large, add the new item at the end
-      myLeads.push(text)
-    }
-  } else {
-    // If the input does not start with "number. ", add the new item at the beginning
-    myLeads.unshift(inputValue)
-  }
-
-  inputEl.value = ""
-  localStorage.setItem("myLeads", JSON.stringify(myLeads))
   render(myLeads)
 })
 
