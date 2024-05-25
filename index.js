@@ -41,7 +41,13 @@ function render(leads) {
 // ============ Save Tab ============
 tabBtn.addEventListener("click", function () {
   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-    myLeads.unshift(tabs[0].url)
+    let index = parseInt(inputEl.value) - 1
+
+    // If inputEl does not contain a valid number, or the index is out of bounds, save the URL at the first index
+    if (isNaN(index) || index < 0 || index > myLeads.length) myLeads.unshift(tabs[0].url)
+    // If inputEl contains a valid number, save the URL at that index
+    else myLeads.splice(index, 0, tabs[0].url)
+
     localStorage.setItem("myLeads", JSON.stringify(myLeads))
     render(myLeads)
   })
