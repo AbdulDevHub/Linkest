@@ -44,7 +44,8 @@ tabBtn.addEventListener("click", function () {
     let index = parseInt(inputEl.value) - 1
 
     // If inputEl does not contain a valid number, or the index is out of bounds, save the URL at the first index
-    if (isNaN(index) || index < 0 || index > myLeads.length) myLeads.unshift(tabs[0].url)
+    if (isNaN(index) || index < 0 || index > myLeads.length)
+      myLeads.unshift(tabs[0].url)
     // If inputEl contains a valid number, save the URL at that index
     else myLeads.splice(index, 0, tabs[0].url)
 
@@ -66,22 +67,14 @@ inputBtn.addEventListener("click", function () {
   let index = parseInt(inputValue.substring(0, dotIndex)) - 1
   let text = inputValue.substring(dotIndex + 2)
 
-  // Check if the input starts with "number. "
+  // Check if the input starts with "#. "
   if (!isNaN(index) && text) {
     // If the index is within the array bounds, insert the new item at that position
-    if (index >= 0 && index <= myLeads.length) {
-      myLeads.splice(index, 0, text)
-    } else if (index < 0) {
-      // If the index is negative, add the new item at the beginning
-      myLeads.unshift(text)
-    } else {
-      // If the index is too large, add the new item at the end
-      myLeads.push(text)
-    }
-  } else {
-    // If the input does not start with "number. ", add the new item at the beginning
-    myLeads.unshift(inputValue)
-  }
+    if (index >= 0 && index <= myLeads.length) myLeads.splice(index, 0, text)
+    else myLeads.push(text) // Add the new item at the end
+
+    // If the input does not start with "#. ", add the new item at the beginning
+  } else myLeads.unshift(inputValue)
 
   inputEl.value = ""
   localStorage.setItem("myLeads", JSON.stringify(myLeads))
@@ -98,55 +91,62 @@ window.addEventListener("keydown", function (event) {
 deleteBtn.addEventListener("click", function () {
   let inputValue = inputEl.value
   let deletedValues = []
-  let totalDeleted = 0 // Keep track of the total number of items deleted
-  if (inputValue) {
-    // Split the input value by comma to get the indices
-    let indices = inputValue.split(",")
-    // Sort the indices in descending order
-    indices.sort((a, b) => b - a)
+
+  // Multiple Index Deletion: Only if inputValue contains #, spaces, or '-'
+  // and at least one number. Ex: "1 3 5-8 10 2"
+  if (inputValue.match(/^(?=.*\d)[0-9\s-]*$/)) {
+    let indices = inputValue.split(/\s+/) // Split input by one or more spaces
+
+    // Convert any present ranges to indices
+    let finalIndices = []
     for (let i = 0; i < indices.length; i++) {
       let index = indices[i]
-      // If the index includes a dash, it's a range
       if (index.includes("-")) {
         // Split the range into start and end
         let range = index.split("-")
-        let start = parseInt(range[0]) - totalDeleted // Adjust the start index
-        let end = parseInt(range[1]) - totalDeleted // Adjust the end index
-        // If the start or end is not a number, or out of range, alert the user
-        if (isNaN(start) || isNaN(end) || start < 1 || end > myLeads.length) {
-          alert("Invalid range: " + index)
-          continue
+        let start = parseInt(range[0])
+        let end = parseInt(range[1])
+
+        // Convert the range to individual indices and add them to the finalIndices array
+        for (let j = start; j <= end; j++) {
+          if (!finalIndices.includes(j)) finalIndices.push(j)
         }
-        // Delete each link in the range and add them to the deletedValues array
-        let deleted = myLeads.splice(start - 1, end - start + 1)
-        deletedValues.push(
-          ...deleted.map((item, idx) => `${start + idx}. ${item}`)
-        ) // Include the index in the deleted values
-        totalDeleted += deleted.length // Update the total number of items deleted
       } else {
-        let idx = parseInt(index) - totalDeleted // Adjust the index
-        // If the index is not a number, or out of range, alert the user
-        if (isNaN(idx) || idx < 1 || idx > myLeads.length) {
-          alert("Invalid index: " + index)
-          continue
-        }
-        // Delete the link at the index and add it to the deletedValues array
-        deletedValues.push(`${idx}. ${myLeads.splice(idx - 1, 1)[0]}`) // Include the index in the deleted value
-        totalDeleted++ // Update the total number of items deleted
+        // If it's not a range, just add it to finalIndices
+        let idx = parseInt(index)
+        if (!finalIndices.includes(idx)) finalIndices.push(idx)
       }
     }
-    // Set the input value to the deleted values, separated by " + "
+
+    // Sort the finalIndices array from biggest to smallest
+    finalIndices.sort((a, b) => b - a)
+
+    // Delete the indices in the finalIndices array
+    for (let i = 0; i < finalIndices.length; i++) {
+      let idx = finalIndices[i]
+      // If index out of range, alert user
+      if (idx < 1 || idx > myLeads.length) {
+        alert("Invalid index: " + idx)
+        continue
+      }
+      // Delete link and add it to deletedValues array along with its index #
+      deletedValues.push(`${idx}. ${myLeads.splice(idx - 1, 1)[0]}`)
+    }
+
+    // Set input to deleted values separated by " + "
     inputEl.value = deletedValues.join(" + ")
-  } else {
-    // If the input is empty, delete the first item in the list and put it in the input
-    inputEl.value = `1. ${myLeads.splice(0, 1)[0]}`
   }
+
+  // If input empty, delete first item in list and put it in input
+  else inputEl.value = `1. ${myLeads.splice(0, 1)[0]}`
+
   localStorage.setItem("myLeads", JSON.stringify(myLeads))
   render(myLeads)
 })
 
 // ============ Delete All ============
 deleteAllBtn.addEventListener("dblclick", function () {
+  inputEl.value = myLeads.join(" + ")
   localStorage.clear()
   myLeads = []
   render(myLeads)
