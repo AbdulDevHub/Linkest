@@ -83,7 +83,10 @@ inputBtn.addEventListener("click", function () {
 
 // ============ Delete ============
 window.addEventListener("keydown", function (event) {
-  if (inputEl.value.match(/^(?=.*\d)[0-9\s-]*$/) && event.key === "Delete") {
+  if (
+    (inputEl.value.match(/^(?=.*\d)[0-9\s-]*$/) || inputEl.value === "") &&
+    event.key === "Delete"
+  ) {
     deleteBtn.click()
   }
 })
