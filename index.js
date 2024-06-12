@@ -83,7 +83,7 @@ inputBtn.addEventListener("click", function () {
 
 // ============ Delete ============
 window.addEventListener("keydown", function (event) {
-  if (event.key === "Delete") {
+  if (inputEl.value.match(/^(?=.*\d)[0-9\s-]*$/) && event.key === "Delete") {
     deleteBtn.click()
   }
 })
@@ -137,7 +137,7 @@ deleteBtn.addEventListener("click", function () {
     inputEl.value = deletedValues.join(" + ")
   }
 
-  // If input empty, delete first item in list and put it in input
+  // Even if input not empty, delete first item in list and put it in input
   else inputEl.value = `1. ${myLeads.splice(0, 1)[0]}`
 
   localStorage.setItem("myLeads", JSON.stringify(myLeads))
