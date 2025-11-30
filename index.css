@@ -3,6 +3,8 @@ body {
     padding: 10px;
     font-family: Arial, Helvetica, sans-serif;
     min-width: 400px;
+    background: #1e1e1e;
+    color: #f0f0f0;
 }
 
 input {
@@ -11,6 +13,8 @@ input {
     box-sizing: border-box;
     border: 1px solid #1abc9c;
     margin-bottom: 4px;
+    background: #2a2a2a;
+    color: #f0f0f0;
 }
 
 button {
@@ -29,8 +33,9 @@ button#open-file-btn {
 }
 
 .delete-btn {
-    background: white;
+    background: #2a2a2a;
     color: #e74c3c;
+    border: 1px solid #e74c3c;
 }
 
 ol {
@@ -43,7 +48,7 @@ li {
 }
 
 a {
-    color: #e74c3c;
+    color: #ff6b5f;
 }
 
 .notUrl a {
