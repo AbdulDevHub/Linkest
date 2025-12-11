@@ -1,18 +1,27 @@
-<html>
-    <head><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.css">
-        <link rel="stylesheet" href="index.css">
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Linkest</title>
+
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.css">
+        <link rel="stylesheet" href="styles/index.css">
+        <link rel="stylesheet" href="styles/effects.css" />
     </head>
+
     <body>
         <input type="text" id="input-el">
-        <button id="input-btn">SAVE INPUT</button>
-        <button id="tab-btn">SAVE TAB</button>
-        <button class="delete-btn" id="delete-btn">DELETE</button>
-        <button class="delete-btn" id="delete-all-btn">DELETE ALL</button>
+        <button id="input-btn" class="waves-effect waves-light">SAVE INPUT</button>
+        <button id="tab-btn" class="waves-effect waves-light">SAVE TAB</button>
+        <button id="delete-btn" class="delete-btn waves-effect waves-light">DELETE</button>
+        <button id="delete-all-btn" class="delete-btn waves-effect waves-light">DELETE ALL</button>
         
         <input type="file" id="file-input" multiple style="display: none;">
-        <button id="open-file-btn">OPEN</button>
-        <ol id="ul-el">
-        </ol>
-        <script src="index.js"></script>
+        <button id="open-file-btn" class="waves-effect waves-light">OPEN</button>
+        <ol id="ul-el"></ol>
+
+        <script src="scripts/index.js"></script>
+        <script src="scripts/materialize.js"></script>
     </body>
 </html>

@@ -15,6 +15,7 @@ input {
     margin-bottom: 4px;
     background: #2a2a2a;
     color: #f0f0f0;
+    border-radius: 6px;
 }
 
 button {
@@ -24,18 +25,22 @@ button {
     border: 1px solid #1abc9c;
     font-weight: bold;
     font-size: 0.7rem;
+    border-radius: 6px;
+    cursor: pointer;
 }
 
 button#open-file-btn {
     padding: 10px 16px;
     background: #1590df;
     color: white;
+    border-radius: 6px;
 }
 
 .delete-btn {
     background: #2a2a2a;
     color: #e74c3c;
     border: 1px solid #e74c3c;
+    border-radius: 6px;
 }
 
 ol {
