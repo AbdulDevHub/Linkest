@@ -2,7 +2,7 @@ body {
     margin: 0;
     padding: 10px;
     font-family: Arial, Helvetica, sans-serif;
-    min-width: 400px;
+    min-width: 395px;
     background: #1e1e1e;
     color: #f0f0f0;
 }
@@ -29,13 +29,6 @@ button {
     cursor: pointer;
 }
 
-button#open-file-btn {
-    padding: 10px 16px;
-    background: #1590df;
-    color: white;
-    border-radius: 6px;
-}
-
 .delete-btn {
     background: #2a2a2a;
     color: #e74c3c;
@@ -44,18 +37,71 @@ button#open-file-btn {
 }
 
 ol {
-    margin-top: 20px;
-    padding-left: 1.25em;
+    margin-top: 10;
+    padding-left: 0;
 }
 
 li {
-    margin-top: 5px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px;
+    border-radius: 6px;
+}
+
+/* Small index button that contains the number and toggles selection */
+.index-btn {
+    min-width: 30px;
+    height: 30px;
+    padding: 0;
+    border-radius: 6px;
+    border: 1px solid #444;
+    background: #2a2a2a;
+    color: #f0f0f0;
+    font-weight: bold;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Visual feedback for selected items */
+li.selected {
+    background: rgba(26, 188, 156, 0.08);
+    border-left: 4px solid #1abc9c;
+}
+
+/* when index button is pressed (selected look) */
+.index-btn.selected {
+    background: #1abc9c;
+    color: #0f2a23;
+    border-color: #1abc9c;
 }
 
 a {
     color: #1abc9c;
+    text-decoration: none;
+    flex: 1 1 auto;
 }
 
 .notURL a {
     text-decoration: none;
+}
+
+button#open-files-btn {
+  background: #2a2a2a;
+  border: 1px solid #888;
+  color: #ddd;
+}
+
+button#open-links-btn {
+  background: #2a2a2a;
+  border: 1px solid #888;
+  color: #ddd;
+}
+
+button#copy-btn {
+  background: #2a2a2a;
+  border: 1px solid #888;
+  color: #ddd;
 }

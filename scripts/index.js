@@ -1,225 +1,228 @@
 let myLeads = []
+let lastSelectedIndex = null
+
 const inputEl = document.getElementById("input-el")
 const inputBtn = document.getElementById("input-btn")
 const ulEl = document.getElementById("ul-el")
-const deleteAllBtn = document.getElementById("delete-all-btn")
 const deleteBtn = document.getElementById("delete-btn")
 const leadsFromLocalStorage = JSON.parse(localStorage.getItem("myLeads"))
 const tabBtn = document.getElementById("tab-btn")
-const openFileBtn = document.getElementById("open-file-btn")
+const openFilesBtn = document.getElementById("open-files-btn")
+const openLinksBtn = document.getElementById("open-links-btn")
+const copyBtn = document.getElementById("copy-btn")
 const fileInput = document.getElementById("file-input")
 
-// ============ Access Saved Bookmarks ============
+// ============ Load ============
 if (leadsFromLocalStorage) {
   myLeads = leadsFromLocalStorage
   render(myLeads)
 }
 
-// ============ Render Bookmarks ============
+// ============ Render ============
 function render(leads) {
-  let listItems = ""
-  for (let i = 0; i < leads.length; i++) {
-    // Check if the lead is a URL or not
-    let url = leads[i]
-    let className = ""
-    if (!/^https?:\/\//i.test(leads[i])) {
-      // If it's not a URL, make it a Google search query
-      url = "https://www.google.com/search?q=" + encodeURIComponent(leads[i])
-      className = "notURL"
-    }
-    listItems += `
-            <li class='${className}'>
-                <a target='_blank' href='${url}'>
-                    ${leads[i]}
-                </a>
-            </li>
-        `
-  }
-  ulEl.innerHTML = listItems
+  ulEl.innerHTML = leads
+    .map((lead, i) => {
+      let url = lead
+      let className = ""
+      if (!/^https?:\/\//i.test(lead)) {
+        url = "https://www.google.com/search?q=" + encodeURIComponent(lead)
+        className = "notURL"
+      }
+
+      return `
+        <li data-index="${i + 1}" class="${className}">
+          <button class="index-btn" data-index="${i + 1}">${i + 1}</button>
+          <a target="_blank" href="${url}">${lead}</a>
+        </li>
+      `
+    })
+    .join("")
+
+  attachSelectionHandlers()
 }
 
-// ============ Save Tab ============
-tabBtn.addEventListener("click", function () {
-  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-    let index = parseInt(inputEl.value) - 1
+// ============ Selection Logic ============
+function attachSelectionHandlers() {
+  const buttons = ulEl.querySelectorAll(".index-btn")
 
-    // If inputEl does not contain a valid number, or the index is out of bounds, save the URL at the first index
-    if (isNaN(index) || index < 0 || index > myLeads.length)
-      myLeads.unshift(tabs[0].url)
-    // If inputEl contains a valid number, save the URL at that index
-    else myLeads.splice(index, 0, tabs[0].url)
+  buttons.forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      const index = parseInt(btn.dataset.index)
+      const li = btn.closest("li")
 
-    localStorage.setItem("myLeads", JSON.stringify(myLeads))
-    render(myLeads)
+      if (e.shiftKey && lastSelectedIndex !== null) {
+        selectRange(lastSelectedIndex, index)
+      } else {
+        toggleItem(li, btn)
+      }
+
+      lastSelectedIndex = index
+    })
   })
+}
+
+function toggleItem(li, btn) {
+  li.classList.toggle("selected")
+  btn.classList.toggle("selected")
+}
+
+function selectRange(from, to) {
+  const [start, end] = [from, to].sort((a, b) => a - b)
+  const items = ulEl.querySelectorAll("li")
+
+  for (let i = start - 1; i <= end - 1; i++) {
+    items[i].classList.add("selected")
+    items[i].querySelector(".index-btn").classList.add("selected")
+  }
+}
+
+function clearSelection() {
+  ulEl
+    .querySelectorAll(".selected")
+    .forEach((el) => el.classList.remove("selected"))
+  lastSelectedIndex = null
+}
+
+// ============ Ctrl/Cmd + A ============
+window.addEventListener("keydown", (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "a") {
+    e.preventDefault()
+
+    const items = ulEl.querySelectorAll("li")
+    const selected = ulEl.querySelectorAll("li.selected")
+
+    if (selected.length === items.length) {
+      clearSelection()
+    } else {
+      items.forEach((li) => {
+        li.classList.add("selected")
+        li.querySelector(".index-btn").classList.add("selected")
+      })
+    }
+  }
+})
+
+// ============ Unified Delete ============
+function handleDelete() {
+  const selectedItems = Array.from(ulEl.querySelectorAll("li.selected"))
+
+  let deleted = []
+
+  if (selectedItems.length) {
+    const indices = selectedItems
+      .map((li) => parseInt(li.dataset.index))
+      .sort((a, b) => b - a) // IMPORTANT: descending for safe splice
+
+    indices.forEach((i) => {
+      deleted.push(`${i}. ${myLeads.splice(i - 1, 1)[0]}`)
+    })
+  } else if (myLeads.length) {
+    deleted.push(`1. ${myLeads.shift()}`)
+  }
+
+  if (deleted.length) {
+    inputEl.value = deleted.join(" + ")
+    localStorage.setItem("myLeads", JSON.stringify(myLeads))
+    clearSelection()
+    render(myLeads)
+  }
+}
+
+deleteBtn.addEventListener("click", handleDelete)
+
+window.addEventListener("keydown", (e) => {
+  if (e.key === "Delete" && inputEl.value.trim() === "") {
+    handleDelete()
+  }
 })
 
 // ============ Save Input ============
-inputEl.addEventListener("keydown", function (event) {
-  if (event.key === "Enter") {
-    inputBtn.click()
-  }
+inputEl.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") inputBtn.click()
 })
 
-inputBtn.addEventListener("click", function () {
-  let inputValue = inputEl.value
-  let dotIndex = inputValue.indexOf(". ")
-  let index = parseInt(inputValue.substring(0, dotIndex)) - 1
-  let text = inputValue.substring(dotIndex + 2)
+inputBtn.addEventListener("click", () => {
+  const inputValue = inputEl.value.trim()
+  if (!inputValue) return
 
-  // Check if the input starts with "#. "
-  if (!isNaN(index) && text) {
-    // If the index is within the array bounds, insert the new item at that position
-    if (index >= 0 && index <= myLeads.length) myLeads.splice(index, 0, text)
-    else myLeads.push(text) // Add the new item at the end
+  // Match "N. text"
+  const match = inputValue.match(/^(\d+)\.\s*(.+)$/)
 
-    // If the input does not start with "#. ", add the new item at the beginning
-  } else myLeads.unshift(inputValue)
+  if (match) {
+    const index = parseInt(match[1], 10) - 1
+    const text = match[2]
+
+    if (index >= 0 && index <= myLeads.length) {
+      myLeads.splice(index, 0, text)
+    } else {
+      myLeads.push(text)
+    }
+  } else {
+    myLeads.unshift(inputValue)
+  }
 
   inputEl.value = ""
   localStorage.setItem("myLeads", JSON.stringify(myLeads))
   render(myLeads)
 })
 
-// ============ Delete ============
-window.addEventListener("keydown", function (event) {
-  if (
-    (inputEl.value.match(/^(?=.*\d)[0-9\s-]*$/) || inputEl.value === "") &&
-    event.key === "Delete"
-  ) {
-    deleteBtn.click()
+// ============ Save Tab ============
+tabBtn.addEventListener("click", () => {
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    myLeads.unshift(tabs[0].url)
+    localStorage.setItem("myLeads", JSON.stringify(myLeads))
+    render(myLeads)
+  })
+})
+
+// ============ Open ============
+openFilesBtn.addEventListener("click", () => {
+  fileInput.click()
+})
+
+openLinksBtn.addEventListener("click", () => {
+  const selected = Array.from(ulEl.querySelectorAll("li.selected"))
+
+  let indices = selected.length
+    ? selected.map((li) => parseInt(li.dataset.index))
+    : myLeads.length
+    ? [1]
+    : []
+
+  indices.forEach((i) => {
+    let url = myLeads[i - 1]
+    if (!/^https?:\/\//i.test(url)) {
+      url = "https://www.google.com/search?q=" + encodeURIComponent(url)
+    }
+    window.open(url, "_blank")
+  })
+})
+
+copyBtn.addEventListener("click", async () => {
+  const selected = Array.from(ulEl.querySelectorAll("li.selected"))
+  if (!selected.length) return
+
+  const text = selected
+    .map((li) => parseInt(li.dataset.index))
+    .sort((a, b) => a - b)
+    .map((i) => myLeads[i - 1])
+    .join("\n")
+
+  try {
+    await navigator.clipboard.writeText(text)
+  } catch (err) {
+    console.error("Clipboard copy failed", err)
   }
 })
 
-deleteBtn.addEventListener("click", function () {
-  let inputValue = inputEl.value
-  let deletedValues = []
-
-  // Multiple Index Deletion: Only if inputValue contains #, spaces, or '-'
-  // and at least one number. Ex: "1 3 5-8 10 2"
-  if (inputValue.match(/^(?=.*\d)[0-9\s-]*$/)) {
-    let indices = inputValue.split(/\s+/) // Split input by one or more spaces
-
-    // Convert any present ranges to indices
-    let finalIndices = []
-    for (let i = 0; i < indices.length; i++) {
-      let index = indices[i]
-      if (index.includes("-")) {
-        // Split the range into start and end
-        let range = index.split("-")
-        let start = parseInt(range[0])
-        let end = parseInt(range[1])
-
-        // Convert the range to individual indices and add them to the finalIndices array
-        for (let j = start; j <= end; j++) {
-          if (!finalIndices.includes(j)) finalIndices.push(j)
-        }
-      } else {
-        // If it's not a range, just add it to finalIndices
-        let idx = parseInt(index)
-        if (!finalIndices.includes(idx)) finalIndices.push(idx)
-      }
-    }
-
-    // Sort the finalIndices array from biggest to smallest
-    finalIndices.sort((a, b) => b - a)
-
-    // Delete the indices in the finalIndices array
-    for (let i = 0; i < finalIndices.length; i++) {
-      let idx = finalIndices[i]
-      // If index out of range, alert user
-      if (idx < 1 || idx > myLeads.length) {
-        alert("Invalid index: " + idx)
-        continue
-      }
-      // Delete link and add it to deletedValues array along with its index #
-      deletedValues.push(`${idx}. ${myLeads.splice(idx - 1, 1)[0]}`)
-    }
-
-    // Set input to deleted values separated by " + "
-    inputEl.value = deletedValues.join(" + ")
-  }
-
-  // Even if input not empty, delete first item in list and put it in input
-  else inputEl.value = `1. ${myLeads.splice(0, 1)[0]}`
-
-  localStorage.setItem("myLeads", JSON.stringify(myLeads))
-  render(myLeads)
-})
-
-// ============ Delete All ============
-deleteAllBtn.addEventListener("dblclick", function () {
-  inputEl.value = myLeads.join(" + ")
-  localStorage.clear()
-  myLeads = []
-  render(myLeads)
-})
-
-// ============ Open File Input or Open Links ============
-openFileBtn.addEventListener("click", function () {
-  let inputValue = inputEl.value
-  if (inputValue) {
-    // Split the input value by comma to get the indices
-    let indices = inputValue.split(",")
-    for (let i = 0; i < indices.length; i++) {
-      let index = indices[i]
-      // If the index includes a dash, it's a range
-      if (index.includes("-")) {
-        // Split the range into start and end
-        let range = index.split("-")
-        let start = parseInt(range[0])
-        let end = parseInt(range[1])
-        // If the start or end is not a number, or out of range, alert the user
-        if (isNaN(start) || isNaN(end) || start < 1 || end > myLeads.length) {
-          alert("Invalid range: " + index)
-          continue
-        }
-        // Open each link in the range in a new tab
-        for (let j = start; j <= end; j++) {
-          let url = myLeads[j - 1]
-          if (!/^https?:\/\//i.test(url)) {
-            // If it's not a URL, make it a Google search query
-            url = "https://www.google.com/search?q=" + encodeURIComponent(url)
-          }
-          window.open(url, "_blank")
-        }
-      } else {
-        let idx = parseInt(index)
-        // If the index is not a number, or out of range, alert the user
-        if (isNaN(idx) || idx < 1 || idx > myLeads.length) {
-          alert("Invalid index: " + index)
-          continue
-        }
-        let url = myLeads[idx - 1]
-        if (!/^https?:\/\//i.test(url)) {
-          // If it's not a URL, make it a Google search query
-          url = "https://www.google.com/search?q=" + encodeURIComponent(url)
-        }
-        window.open(url, "_blank")
-      }
-    }
-  } else {
-    fileInput.click()
-  }
-})
-
-// ============ Handle File Selection ============
+// ============ File Input ============
 fileInput.addEventListener("change", function () {
-  // Get the selected files
-  let files = this.files
-  // Loop through each file
-  for (let i = 0; i < files.length; i++) {
-    let file = files[i]
-    // Create a new FileReader to read the file
-    let reader = new FileReader()
-    reader.onload = function (e) {
-      // Create a new Blob from the file data
-      let newBlob = new Blob([e.target.result], { type: file.type })
-      // Create a URL for the Blob
-      let url = URL.createObjectURL(newBlob)
-      // Open the URL in a new tab
-      chrome.tabs.create({ url: url })
+  Array.from(this.files).forEach((file) => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const blob = new Blob([e.target.result], { type: file.type })
+      chrome.tabs.create({ url: URL.createObjectURL(blob) })
     }
     reader.readAsArrayBuffer(file)
-  }
+  })
 })
