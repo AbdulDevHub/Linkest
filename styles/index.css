@@ -1,109 +1,112 @@
+/* ============ CSS Variables ============ */
+:root {
+    --primary-color: #1abc9c;
+    --primary-dark: #0f2a23;
+    --danger-color: #e74c3c;
+    --bg-dark: #1e1e1e;
+    --bg-medium: #2a2a2a;
+    --border-gray: #444;
+    --border-light: #888;
+    --text-light: #f0f0f0;
+    --text-muted: #ddd;
+    --border-radius: 6px;
+    --spacing-sm: 4px;
+    --spacing-md: 10px;
+}
+
+/* ============ Base Styles ============ */
 body {
     margin: 0;
-    padding: 10px;
+    padding: var(--spacing-md);
     font-family: Arial, Helvetica, sans-serif;
     min-width: 395px;
-    background: #1e1e1e;
-    color: #f0f0f0;
+    background: var(--bg-dark);
+    color: var(--text-light);
 }
 
-input {
+/* ============ Form Elements ============ */
+input[type="text"] {
     width: 100%;
-    padding: 10px;
+    padding: var(--spacing-md);
     box-sizing: border-box;
-    border: 1px solid #1abc9c;
-    margin-bottom: 4px;
-    background: #2a2a2a;
-    color: #f0f0f0;
-    border-radius: 6px;
+    border: 1px solid var(--primary-color);
+    margin-bottom: var(--spacing-sm);
+    background: var(--bg-medium);
+    color: var(--text-light);
+    border-radius: var(--border-radius);
 }
 
+/* ============ Buttons ============ */
 button {
-    background: #1abc9c;
+    background: var(--primary-color);
     color: white;
-    padding: 10px;
-    border: 1px solid #1abc9c;
+    padding: var(--spacing-md);
+    border: 1px solid var(--primary-color);
     font-weight: bold;
     font-size: 0.7rem;
-    border-radius: 6px;
+    border-radius: var(--border-radius);
     cursor: pointer;
 }
 
-.delete-btn {
-    background: #2a2a2a;
-    color: #e74c3c;
-    border: 1px solid #e74c3c;
-    border-radius: 6px;
+/* Secondary button style (shared by multiple buttons) */
+button#open-files-btn,
+button#open-links-btn,
+button#copy-btn {
+    background: var(--bg-medium);
+    border: 1px solid var(--border-light);
+    color: var(--text-muted);
 }
 
+.delete-btn {
+    background: var(--bg-medium);
+    color: var(--danger-color);
+    border: 1px solid var(--danger-color);
+}
+
+.index-btn {
+    align-self: flex-start;
+    min-width: 30px;
+    height: 30px;
+    padding: 0;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-gray);
+    background: var(--bg-medium);
+    color: var(--text-light);
+    font-weight: bold;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.index-btn.selected {
+    background: var(--primary-color);
+    color: var(--primary-dark);
+    border-color: var(--primary-color);
+}
+
+/* ============ List Styles ============ */
 ol {
-    margin-top: 10px;
+    margin-top: var(--spacing-md);
     padding-left: 0;
-    border-radius: 6px;
+    border-radius: var(--border-radius);
     overflow: hidden;
 }
 
 li {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 4px;
+    gap: var(--spacing-md);
+    padding: var(--spacing-sm);
 }
 
-/* Small index button that contains the number and toggles selection */
-.index-btn {
-    align-self: flex-start;
-    min-width: 30px;
-    height: 30px;
-    padding: 0;
-    border-radius: 6px;
-    border: 1px solid #444;
-    background: #2a2a2a;
-    color: #f0f0f0;
-    font-weight: bold;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
-
-/* Visual feedback for selected items */
 li.selected {
     background: rgba(26, 188, 156, 0.08);
-    border-left: 4px solid #1abc9c;
+    border-left: 4px solid var(--primary-color);
 }
 
-/* when index button is pressed (selected look) */
-.index-btn.selected {
-    background: #1abc9c;
-    color: #0f2a23;
-    border-color: #1abc9c;
-}
-
+/* ============ Links ============ */
 a {
-    color: #1abc9c;
+    color: var(--primary-color);
     text-decoration: none;
     flex: 1 1 auto;
-}
-
-.notURL a {
-    text-decoration: none;
-}
-
-button#open-files-btn {
-  background: #2a2a2a;
-  border: 1px solid #888;
-  color: #ddd;
-}
-
-button#open-links-btn {
-  background: #2a2a2a;
-  border: 1px solid #888;
-  color: #ddd;
-}
-
-button#copy-btn {
-  background: #2a2a2a;
-  border: 1px solid #888;
-  color: #ddd;
 }

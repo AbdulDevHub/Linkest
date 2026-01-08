@@ -1,78 +1,124 @@
 let myLeads = []
 let lastSelectedIndex = null
 
-const inputEl = document.getElementById("input-el")
-const inputBtn = document.getElementById("input-btn")
-const ulEl = document.getElementById("ul-el")
-const deleteBtn = document.getElementById("delete-btn")
-const leadsFromLocalStorage = JSON.parse(localStorage.getItem("myLeads"))
-const tabBtn = document.getElementById("tab-btn")
-const openFilesBtn = document.getElementById("open-files-btn")
-const openLinksBtn = document.getElementById("open-links-btn")
-const copyBtn = document.getElementById("copy-btn")
-const fileInput = document.getElementById("file-input")
+// Cache DOM elements
+const elements = {
+  input: document.getElementById("input-el"),
+  inputBtn: document.getElementById("input-btn"),
+  list: document.getElementById("ul-el"),
+  deleteBtn: document.getElementById("delete-btn"),
+  tabBtn: document.getElementById("tab-btn"),
+  openFilesBtn: document.getElementById("open-files-btn"),
+  openLinksBtn: document.getElementById("open-links-btn"),
+  copyBtn: document.getElementById("copy-btn"),
+  fileInput: document.getElementById("file-input")
+}
+
+// ============ Constants ============
+const URL_REGEX = /^https?:\/\//i
+const INDEX_INPUT_REGEX = /^(\d+)\.\s*(.+)$/
+const GOOGLE_SEARCH_URL = "https://www.google.com/search?q="
+
+// ============ Utilities ============
+const storage = {
+  get: () => JSON.parse(localStorage.getItem("myLeads")),
+  set: (data) => localStorage.setItem("myLeads", JSON.stringify(data))
+}
+
+const isURL = (text) => URL_REGEX.test(text)
+
+const makeURL = (text) => 
+  isURL(text) ? text : GOOGLE_SEARCH_URL + encodeURIComponent(text)
+
+const copyToClipboard = async (text) => {
+  try {
+    await navigator.clipboard.writeText(text)
+  } catch (err) {
+    console.error("Clipboard copy failed", err)
+  }
+}
 
 // ============ Load ============
-if (leadsFromLocalStorage) {
-  myLeads = leadsFromLocalStorage
+const storedLeads = storage.get()
+if (storedLeads) {
+  myLeads = storedLeads
   render(myLeads)
 }
 
 // ============ Render ============
 function render(leads) {
-  ulEl.innerHTML = leads
+  elements.list.innerHTML = leads
     .map((lead, i) => {
-      let url = lead
-      let className = ""
-
-      if (!/^https?:\/\//i.test(lead)) {
-        url = "https://www.google.com/search?q=" + encodeURIComponent(lead)
-        className = "notURL"
-      }
+      const index = i + 1
+      const url = makeURL(lead)
+      const className = isURL(lead) ? "" : "notURL"
 
       return `
-        <li data-index="${i + 1}" class="${className}">
-          <button class="index-btn" data-index="${i + 1}">${i + 1}</button>
+        <li data-index="${index}" class="${className}">
+          <button class="index-btn" data-index="${index}">${index}</button>
           <a class="lead-link" href="${url}">${lead}</a>
         </li>
       `
     })
     .join("")
 
-  attachSelectionHandlers()
-  attachItemClickHandlers()
+  attachEventHandlers()
 }
 
 // ============ Selection Logic ============
-function attachSelectionHandlers() {
-  const buttons = ulEl.querySelectorAll(".index-btn")
+function attachEventHandlers() {
+  const buttons = elements.list.querySelectorAll(".index-btn")
+  const items = elements.list.querySelectorAll("li")
 
   buttons.forEach((btn) => {
-    btn.addEventListener("click", (e) => {
-      e.stopPropagation()
+    btn.addEventListener("click", handleIndexButtonClick)
+  })
 
-      const index = parseInt(btn.dataset.index)
-      const li = btn.closest("li")
-
-      if (e.shiftKey && lastSelectedIndex !== null) {
-        selectRange(lastSelectedIndex, index)
-      } else {
-        toggleItem(li, btn)
-      }
-
-      lastSelectedIndex = index
-    })
+  items.forEach((li) => {
+    li.addEventListener("click", handleItemClick)
   })
 }
 
-function toggleItem(li, btn) {
+function handleIndexButtonClick(e) {
+  e.stopPropagation()
+
+  const index = parseInt(this.dataset.index)
+  const li = this.closest("li")
+
+  if (e.shiftKey && lastSelectedIndex !== null) {
+    selectRange(lastSelectedIndex, index)
+  } else {
+    toggleSelection(li, this)
+  }
+
+  lastSelectedIndex = index
+}
+
+async function handleItemClick(e) {
+  // Ignore index button and allow Ctrl/Cmd+click to open links
+  if (e.target.classList.contains("index-btn") || e.ctrlKey || e.metaKey) {
+    return
+  }
+
+  e.preventDefault()
+
+  const index = parseInt(this.dataset.index)
+  const btn = this.querySelector(".index-btn")
+
+  toggleSelection(this, btn)
+  lastSelectedIndex = this.classList.contains("selected") ? index : null
+
+  await copyToClipboard(myLeads[index - 1])
+}
+
+function toggleSelection(li, btn) {
   li.classList.toggle("selected")
   btn.classList.toggle("selected")
 }
 
 function selectRange(from, to) {
-  const [start, end] = [from, to].sort((a, b) => a - b)
-  const items = ulEl.querySelectorAll("li")
+  const [start, end] = [Math.min(from, to), Math.max(from, to)]
+  const items = elements.list.querySelectorAll("li")
 
   for (let i = start - 1; i <= end - 1; i++) {
     items[i].classList.add("selected")
@@ -81,46 +127,15 @@ function selectRange(from, to) {
 }
 
 function clearSelection() {
-  ulEl
+  elements.list
     .querySelectorAll(".selected")
     .forEach((el) => el.classList.remove("selected"))
   lastSelectedIndex = null
 }
 
-// ============ Item Click + Copy + Ctrl/Open ============
-function attachItemClickHandlers() {
-  const items = ulEl.querySelectorAll("li")
-
-  items.forEach((li) => {
-    li.addEventListener("click", async (e) => {
-      // Ignore index button (handled separately)
-      if (e.target.classList.contains("index-btn")) return
-
-      const link = li.querySelector("a")
-      const index = parseInt(li.dataset.index)
-      const btn = li.querySelector(".index-btn")
-
-      // CTRL / CMD + CLICK → OPEN LINK
-      if (e.ctrlKey || e.metaKey) {
-        // Let the browser handle Ctrl/Cmd+click normally
-        return
-      }
-
-      // Normal click → prevent navigation
-      e.preventDefault()
-
-      // Toggle selection
-      toggleItem(li, btn)
-      lastSelectedIndex = li.classList.contains("selected") ? index : null
-
-      // Copy to clipboard
-      try {
-        await navigator.clipboard.writeText(myLeads[index - 1])
-      } catch (err) {
-        console.error("Clipboard copy failed", err)
-      }
-    })
-  })
+function getSelectedIndices() {
+  return Array.from(elements.list.querySelectorAll("li.selected"))
+    .map((li) => parseInt(li.dataset.index))
 }
 
 // ============ Ctrl/Cmd + A ============
@@ -128,10 +143,10 @@ window.addEventListener("keydown", (e) => {
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "a") {
     e.preventDefault()
 
-    const items = ulEl.querySelectorAll("li")
-    const selected = ulEl.querySelectorAll("li.selected")
+    const items = elements.list.querySelectorAll("li")
+    const allSelected = elements.list.querySelectorAll("li.selected").length === items.length
 
-    if (selected.length === items.length) {
+    if (allSelected) {
       clearSelection()
     } else {
       items.forEach((li) => {
@@ -144,15 +159,12 @@ window.addEventListener("keydown", (e) => {
 
 // ============ Delete ============
 function handleDelete() {
-  const selectedItems = Array.from(ulEl.querySelectorAll("li.selected"))
-  let deleted = []
+  const selectedIndices = getSelectedIndices()
+  const deleted = []
 
-  if (selectedItems.length) {
-    const indices = selectedItems
-      .map((li) => parseInt(li.dataset.index))
-      .sort((a, b) => b - a)
-
-    indices.forEach((i) => {
+  if (selectedIndices.length) {
+    // Sort descending to avoid index shifting during deletion
+    selectedIndices.sort((a, b) => b - a).forEach((i) => {
       deleted.push(`${i}. ${myLeads.splice(i - 1, 1)[0]}`)
     })
   } else if (myLeads.length) {
@@ -160,37 +172,37 @@ function handleDelete() {
   }
 
   if (deleted.length) {
-    inputEl.value = deleted.join(" + ")
-    localStorage.setItem("myLeads", JSON.stringify(myLeads))
+    elements.input.value = deleted.join(" + ")
+    storage.set(myLeads)
     clearSelection()
     render(myLeads)
   }
 }
 
-deleteBtn.addEventListener("click", handleDelete)
+elements.deleteBtn.addEventListener("click", handleDelete)
 
 window.addEventListener("keydown", (e) => {
-  if (e.key === "Delete" && inputEl.value.trim() === "") {
+  if (e.key === "Delete" && elements.input.value.trim() === "") {
     handleDelete()
   }
 })
 
 // ============ Save Input ============
-inputEl.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") inputBtn.click()
+elements.input.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") elements.inputBtn.click()
 })
 
-inputBtn.addEventListener("click", () => {
-  const inputValue = inputEl.value.trim()
+elements.inputBtn.addEventListener("click", () => {
+  const inputValue = elements.input.value.trim()
   if (!inputValue) return
 
-  // Match "N. text"
-  const match = inputValue.match(/^(\d+)\.\s*(.+)$/)
+  const match = inputValue.match(INDEX_INPUT_REGEX)
 
   if (match) {
     const index = parseInt(match[1], 10) - 1
     const text = match[2]
-
+    
+    // Insert at specified position or append if out of range
     if (index >= 0 && index <= myLeads.length) {
       myLeads.splice(index, 0, text)
     } else {
@@ -200,62 +212,50 @@ inputBtn.addEventListener("click", () => {
     myLeads.unshift(inputValue)
   }
 
-  inputEl.value = ""
-  localStorage.setItem("myLeads", JSON.stringify(myLeads))
+  elements.input.value = ""
+  storage.set(myLeads)
   render(myLeads)
 })
 
 // ============ Save Tab ============
-tabBtn.addEventListener("click", () => {
+elements.tabBtn.addEventListener("click", () => {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     myLeads.unshift(tabs[0].url)
-    localStorage.setItem("myLeads", JSON.stringify(myLeads))
+    storage.set(myLeads)
     render(myLeads)
   })
 })
 
-// ============ Open ============
-openFilesBtn.addEventListener("click", () => {
-  fileInput.click()
-})
+// ============ Open Links ============
+elements.openLinksBtn.addEventListener("click", () => {
+  const selectedIndices = getSelectedIndices()
+  const indicesToOpen = selectedIndices.length ? selectedIndices : (myLeads.length ? [1] : [])
 
-openLinksBtn.addEventListener("click", () => {
-  const selected = Array.from(ulEl.querySelectorAll("li.selected"))
-
-  let indices = selected.length
-    ? selected.map((li) => parseInt(li.dataset.index))
-    : myLeads.length
-    ? [1]
-    : []
-
-  indices.forEach((i) => {
-    let url = myLeads[i - 1]
-    if (!/^https?:\/\//i.test(url)) {
-      url = "https://www.google.com/search?q=" + encodeURIComponent(url)
-    }
+  indicesToOpen.forEach((i) => {
+    const url = makeURL(myLeads[i - 1])
     window.open(url, "_blank")
   })
 })
 
-copyBtn.addEventListener("click", async () => {
-  const selected = Array.from(ulEl.querySelectorAll("li.selected"))
-  if (!selected.length) return
+// ============ Copy Selected ============
+elements.copyBtn.addEventListener("click", async () => {
+  const selectedIndices = getSelectedIndices()
+  if (!selectedIndices.length) return
 
-  const text = selected
-    .map((li) => parseInt(li.dataset.index))
+  const text = selectedIndices
     .sort((a, b) => a - b)
     .map((i) => myLeads[i - 1])
     .join("\n")
 
-  try {
-    await navigator.clipboard.writeText(text)
-  } catch (err) {
-    console.error("Clipboard copy failed", err)
-  }
+  await copyToClipboard(text)
 })
 
 // ============ File Input ============
-fileInput.addEventListener("change", function () {
+elements.openFilesBtn.addEventListener("click", () => {
+  elements.fileInput.click()
+})
+
+elements.fileInput.addEventListener("change", function () {
   Array.from(this.files).forEach((file) => {
     const reader = new FileReader()
     reader.onload = (e) => {
