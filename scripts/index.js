@@ -24,6 +24,7 @@ function render(leads) {
     .map((lead, i) => {
       let url = lead
       let className = ""
+
       if (!/^https?:\/\//i.test(lead)) {
         url = "https://www.google.com/search?q=" + encodeURIComponent(lead)
         className = "notURL"
@@ -32,13 +33,14 @@ function render(leads) {
       return `
         <li data-index="${i + 1}" class="${className}">
           <button class="index-btn" data-index="${i + 1}">${i + 1}</button>
-          <a target="_blank" href="${url}">${lead}</a>
+          <a class="lead-link" href="${url}">${lead}</a>
         </li>
       `
     })
     .join("")
 
   attachSelectionHandlers()
+  attachItemClickHandlers()
 }
 
 // ============ Selection Logic ============
@@ -47,6 +49,8 @@ function attachSelectionHandlers() {
 
   buttons.forEach((btn) => {
     btn.addEventListener("click", (e) => {
+      e.stopPropagation()
+
       const index = parseInt(btn.dataset.index)
       const li = btn.closest("li")
 
@@ -83,6 +87,42 @@ function clearSelection() {
   lastSelectedIndex = null
 }
 
+// ============ Item Click + Copy + Ctrl/Open ============
+function attachItemClickHandlers() {
+  const items = ulEl.querySelectorAll("li")
+
+  items.forEach((li) => {
+    li.addEventListener("click", async (e) => {
+      // Ignore index button (handled separately)
+      if (e.target.classList.contains("index-btn")) return
+
+      const link = li.querySelector("a")
+      const index = parseInt(li.dataset.index)
+      const btn = li.querySelector(".index-btn")
+
+      // CTRL / CMD + CLICK → OPEN LINK
+      if (e.ctrlKey || e.metaKey) {
+        // Let the browser handle Ctrl/Cmd+click normally
+        return
+      }
+
+      // Normal click → prevent navigation
+      e.preventDefault()
+
+      // Toggle selection
+      toggleItem(li, btn)
+      lastSelectedIndex = li.classList.contains("selected") ? index : null
+
+      // Copy to clipboard
+      try {
+        await navigator.clipboard.writeText(myLeads[index - 1])
+      } catch (err) {
+        console.error("Clipboard copy failed", err)
+      }
+    })
+  })
+}
+
 // ============ Ctrl/Cmd + A ============
 window.addEventListener("keydown", (e) => {
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "a") {
@@ -102,16 +142,15 @@ window.addEventListener("keydown", (e) => {
   }
 })
 
-// ============ Unified Delete ============
+// ============ Delete ============
 function handleDelete() {
   const selectedItems = Array.from(ulEl.querySelectorAll("li.selected"))
-
   let deleted = []
 
   if (selectedItems.length) {
     const indices = selectedItems
       .map((li) => parseInt(li.dataset.index))
-      .sort((a, b) => b - a) // IMPORTANT: descending for safe splice
+      .sort((a, b) => b - a)
 
     indices.forEach((i) => {
       deleted.push(`${i}. ${myLeads.splice(i - 1, 1)[0]}`)

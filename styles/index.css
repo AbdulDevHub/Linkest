@@ -37,20 +37,22 @@ button {
 }
 
 ol {
-    margin-top: 10;
+    margin-top: 10px;
     padding-left: 0;
+    border-radius: 6px;
+    overflow: hidden;
 }
 
 li {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 6px;
-    border-radius: 6px;
+    padding: 4px;
 }
 
 /* Small index button that contains the number and toggles selection */
 .index-btn {
+    align-self: flex-start;
     min-width: 30px;
     height: 30px;
     padding: 0;
