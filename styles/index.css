@@ -19,7 +19,7 @@ body {
     margin: 0;
     padding: var(--spacing-md);
     font-family: Arial, Helvetica, sans-serif;
-    min-width: 395px;
+    width: 400px;
     background: var(--bg-dark);
     color: var(--text-light);
 }
@@ -34,6 +34,12 @@ input[type="text"] {
     background: var(--bg-medium);
     color: var(--text-light);
     border-radius: var(--border-radius);
+}
+
+#input-index {
+    max-width: 38px;
+    height: 34.475px; /* Match computed height of buttons */
+    text-align: center;
 }
 
 /* ============ Buttons ============ */
@@ -87,6 +93,7 @@ button#copy-btn {
 /* ============ List Styles ============ */
 ol {
     margin-top: var(--spacing-md);
+    margin-bottom: 0;
     padding-left: 0;
     border-radius: var(--border-radius);
     overflow: hidden;
@@ -109,4 +116,5 @@ a {
     color: var(--primary-color);
     text-decoration: none;
     flex: 1 1 auto;
+    word-break: break-word;
 }

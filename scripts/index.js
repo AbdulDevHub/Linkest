@@ -4,6 +4,7 @@ let lastSelectedIndex = null
 // Cache DOM elements
 const elements = {
   input: document.getElementById("input-el"),
+  inputIndex: document.getElementById("input-index"),
   inputBtn: document.getElementById("input-btn"),
   list: document.getElementById("ul-el"),
   deleteBtn: document.getElementById("delete-btn"),
@@ -16,7 +17,6 @@ const elements = {
 
 // ============ Constants ============
 const URL_REGEX = /^https?:\/\//i
-const INDEX_INPUT_REGEX = /^(\d+)\.\s*(.+)$/
 const GOOGLE_SEARCH_URL = "https://www.google.com/search?q="
 
 // ============ Utilities ============
@@ -161,18 +161,24 @@ window.addEventListener("keydown", (e) => {
 function handleDelete() {
   const selectedIndices = getSelectedIndices()
   const deleted = []
+  let deletedFromIndex = null
 
   if (selectedIndices.length) {
     // Sort descending to avoid index shifting during deletion
-    selectedIndices.sort((a, b) => b - a).forEach((i) => {
-      deleted.push(`${i}. ${myLeads.splice(i - 1, 1)[0]}`)
+    const sortedIndices = selectedIndices.sort((a, b) => b - a)
+    deletedFromIndex = Math.min(...selectedIndices)
+    
+    sortedIndices.forEach((i) => {
+      deleted.unshift(myLeads.splice(i - 1, 1)[0])
     })
   } else if (myLeads.length) {
-    deleted.push(`1. ${myLeads.shift()}`)
+    deletedFromIndex = 1
+    deleted.push(myLeads.shift())
   }
 
   if (deleted.length) {
     elements.input.value = deleted.join(" + ")
+    elements.inputIndex.value = deletedFromIndex
     storage.set(myLeads)
     clearSelection()
     render(myLeads)
@@ -196,19 +202,22 @@ elements.inputBtn.addEventListener("click", () => {
   const inputValue = elements.input.value.trim()
   if (!inputValue) return
 
-  const match = inputValue.match(INDEX_INPUT_REGEX)
-
-  if (match) {
-    const index = parseInt(match[1], 10) - 1
-    const text = match[2]
+  const indexValue = elements.inputIndex.value.trim()
+  
+  if (indexValue) {
+    const index = parseInt(indexValue, 10) - 1
     
     // Insert at specified position or append if out of range
     if (index >= 0 && index <= myLeads.length) {
-      myLeads.splice(index, 0, text)
+      myLeads.splice(index, 0, inputValue)
     } else {
-      myLeads.push(text)
+      myLeads.push(inputValue)
     }
+    
+    // Clear the index input after use
+    elements.inputIndex.value = ""
   } else {
+    // No index specified, add to beginning
     myLeads.unshift(inputValue)
   }
 
@@ -220,7 +229,25 @@ elements.inputBtn.addEventListener("click", () => {
 // ============ Save Tab ============
 elements.tabBtn.addEventListener("click", () => {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    myLeads.unshift(tabs[0].url)
+    const indexValue = elements.inputIndex.value.trim()
+    
+    if (indexValue) {
+      const index = parseInt(indexValue, 10) - 1
+      
+      // Insert at specified position or append if out of range
+      if (index >= 0 && index <= myLeads.length) {
+        myLeads.splice(index, 0, tabs[0].url)
+      } else {
+        myLeads.push(tabs[0].url)
+      }
+      
+      // Clear the index input after use
+      elements.inputIndex.value = ""
+    } else {
+      // No index specified, add to beginning
+      myLeads.unshift(tabs[0].url)
+    }
+    
     storage.set(myLeads)
     render(myLeads)
   })
