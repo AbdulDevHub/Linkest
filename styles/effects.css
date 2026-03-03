@@ -1,16 +1,16 @@
 /*----------------Text Selection----------*/
 ::selection {
-  background: #f3c669; /* WebKit/Blink Browsers */
+  background: #11a487; /* WebKit/Blink Browsers */
   color: #ffffff;
 }
 
 ::-moz-selection {
-  background: #f3c669; /* Gecko Browsers */
+  background: #11a487; /* Gecko Browsers */
   color: #ffffff;
 }
 
 ::-ms-selection {
-  background: #f3c669; /* IE 10+ */
+  background: #11a487; /* IE 10+ */
   color: #ffffff;
 }
 
