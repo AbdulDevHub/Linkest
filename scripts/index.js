@@ -25,6 +25,20 @@ const storage = {
   set: (data) => localStorage.setItem("myLeads", JSON.stringify(data))
 }
 
+const deletedStorage = {
+  get: () => JSON.parse(localStorage.getItem("deletedLeads")) || [],
+  set: (data) => localStorage.setItem("deletedLeads", JSON.stringify(data)),
+  add(items) {
+    const now = Date.now()
+    const cutoff = now - 24 * 60 * 60 * 1000
+
+    // Load existing, purge entries older than 24 hours, then prepend new ones
+    const existing = this.get().filter(entry => entry.deletedAt > cutoff)
+    const newEntries = items.map(value => ({ value, deletedAt: now }))
+    this.set([...newEntries, ...existing])
+  }
+}
+
 const isURL = (text) => URL_REGEX.test(text)
 
 const makeURL = (text) => 
@@ -184,6 +198,7 @@ function handleDelete() {
   }
 
   if (deleted.length) {
+    deletedStorage.add(deleted)
     elements.input.value = deleted.join(" + ")
     elements.inputIndex.value = deletedFromIndex
     storage.set(myLeads)
