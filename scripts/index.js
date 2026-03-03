@@ -105,6 +105,13 @@ async function handleItemClick(e) {
   const index = parseInt(this.dataset.index)
   const btn = this.querySelector(".index-btn")
 
+  // Shift+Click selects a range from the last selected item
+  if (e.shiftKey && lastSelectedIndex !== null) {
+    selectRange(lastSelectedIndex, index)
+    lastSelectedIndex = index
+    return
+  }
+
   toggleSelection(this, btn)
   lastSelectedIndex = this.classList.contains("selected") ? index : null
 
