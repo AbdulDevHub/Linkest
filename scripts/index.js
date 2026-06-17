@@ -162,6 +162,11 @@ function getSelectedIndices() {
 // ============ Ctrl/Cmd + A ============
 window.addEventListener("keydown", (e) => {
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "a") {
+    // If the active/target element is an input or textarea, let the default behavior happen
+    if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") {
+      return
+    }
+
     e.preventDefault()
 
     const items = elements.list.querySelectorAll("li")
